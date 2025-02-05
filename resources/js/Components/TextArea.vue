@@ -1,0 +1,18 @@
+<script setup>
+defineProps({
+    modelValue: String,
+});
+
+defineEmits(['update:modelValue']);
+
+</script>
+
+<template>
+    <textarea 
+        :value="modelValue"
+        @input="$emit('update:modelValue', $event.target.value)"
+        id="message" rows="4" class="block p-2.5 text-sm text-gray-900 bg-white border border-[1.5px] border-stroke focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    >
+        
+    </textarea>
+</template>
