@@ -75,7 +75,7 @@ onMounted(async () => {
 });
 
 const loadLeadList = () => {
-    router.get(route('lead-distribution.handle.index'), { search: searchRef.value }, { preserveState: true });
+    router.get(route('full-lead-distribution.handle.index'), { search: searchRef.value }, { preserveState: true });
 }
 
 </script>
@@ -94,7 +94,7 @@ const loadLeadList = () => {
                             <div class="flex justify-content-between">
                                 <div class="mb-4">
                                     <h1 class="text-4xl font-bold text-gray-800">
-                                        Minha Lista
+                                        Buscar lead
                                     </h1>
                                 </div>
 

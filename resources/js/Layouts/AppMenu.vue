@@ -30,11 +30,11 @@ const model = ref([
                     { label: 'Criar', icon: PrimeIcons.PLUS, to: 'grupos.create', permission: 'manage-groups'},
                 ] 
             },
+            { label: 'Buscar Lead', icon: PrimeIcons.SEARCH, to: 'full-lead-distribution.handle.index', permission: true },
 
             { label: 'Minha Lista', icon: PrimeIcons.LIST, to: 'lead-distribution.handle.index', permission: true },
             
             { label: 'Campanhas para usuarios', permission:'view-campaigns' , icon: PrimeIcons.LIST, to: 'lead-distribution.campaigns.users' },
-        
         ]
     }
 ]);

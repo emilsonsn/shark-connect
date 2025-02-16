@@ -57,7 +57,6 @@ class MyListHandleController extends Controller
                 "lead_distribution_prospect.convenant",
                 "lead_distribution_prospect.organ",
                 "lead_distribution_prospect.id"
-            
             ])
             ->paginate(10);
 
@@ -67,6 +66,64 @@ class MyListHandleController extends Controller
         $currentCampaign = $request->user()->getCurrentCampaign();
 
         return Inertia::render('LeadDistribution/LeadList',
+            [
+                'leads' => $leads,
+                'currentCampaign' => $currentCampaign?->id
+            ]
+        );
+    }
+
+    public function full(Request $request)
+    {
+        if($request->user()->isSuperior() && !config('app.debug')){
+            return back();
+        }
+
+        $currentCampaign = $request->user()->getCurrentCampaign();
+
+        $search = $request->query('search');
+
+        if(!isset($search)){
+            return Inertia::render('LeadDistribution/FullLeadList',
+                [
+                    'leads' => Client::where('id', '-1')->paginate(10),
+                    'currentCampaign' => $currentCampaign?->id
+                ]
+            );
+        }
+
+        $leads = Client::select([
+                "clients.id as client_id",
+                "clients.name as client_name", 
+                "lead_distribution_campaigns.name as campaign_name",
+                "lead_distribution_prospect.tabulation_id",
+                "lead_distribution_prospect.margin",
+                "lead_distribution_prospect.convenant",
+                "lead_distribution_prospect.organ",
+                "lead_distribution_prospect.id as id"
+            ])
+            ->join("lead_distribution_prospect", "lead_distribution_prospect.client_id", "=", "clients.id")
+            ->join("lead_distribution_campaigns", "lead_distribution_campaigns.id", "=", "lead_distribution_prospect.lead_distribution_campaign_id")
+            ->join("client_contacts", "client_contacts.client_id", "=", "clients.id")
+            ->where('user_id', $request->user()->id)
+            ->where(function ($query) use ($search) {
+                    $query->where('clients.name', 'like', "%$search%")
+                        ->orWhere('clients.cpf', 'like', "%$search%")
+                        ->orWhere('client_contacts.number', 'like', "%$search%");
+            })
+            ->groupBy([
+                "clients.id",
+                "clients.name",
+                "lead_distribution_campaigns.name",
+                "lead_distribution_prospect.tabulation_id",
+                "lead_distribution_prospect.margin",
+                "lead_distribution_prospect.convenant",
+                "lead_distribution_prospect.organ",
+                "lead_distribution_prospect.id"
+            ])
+            ->paginate(9999999);
+        
+        return Inertia::render('LeadDistribution/FullLeadList',
             [
                 'leads' => $leads,
                 'currentCampaign' => $currentCampaign?->id

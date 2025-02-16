@@ -84,6 +84,9 @@ Route::middleware([
         Route::get('/', [MyListHandleController::class, 'index'])
             ->name('lead-distribution.handle.index');
 
+        Route::get('/full', [MyListHandleController::class, 'full'])
+            ->name('full-lead-distribution.handle.index');
+
         Route::get('/campanhas', [MyListController::class, "index"])
             ->name('lead-distribution.index');
 
