@@ -107,10 +107,14 @@ class MyListHandleController extends Controller
             ->join("client_contacts", "client_contacts.client_id", "=", "clients.id")
             ->where('user_id', $request->user()->id)
             ->where(function ($query) use ($search) {
-                    $query->where('clients.name', 'like', "%$search%")
-                        ->orWhere('clients.cpf', 'like', "%$search%")
-                        ->orWhere('client_contacts.number', 'like', "%$search%");
-            })
+                $query->where('clients.name', 'like', "%$search%")
+                    ->orWhere('clients.cpf', 'like', "%$search%")
+                    ->orWhere(function($query2) use ($search) {
+                        $query2->where('client_contacts.number', 'like', "%$search%")
+                            ->orWhereRaw("RIGHT(client_contacts.number, 8) LIKE ?", ["%".substr($search, -8)."%"])
+                            ->orWhereRaw("RIGHT(client_contacts.number, 9) LIKE ?", ["%".substr($search, -9)."%"]);
+                    });
+            })            
             ->groupBy([
                 "clients.id",
                 "clients.name",
