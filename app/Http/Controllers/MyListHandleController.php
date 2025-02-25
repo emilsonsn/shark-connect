@@ -17,11 +17,6 @@ class MyListHandleController extends Controller
 {
     public function index(Request $request)
     {
-        //if is superior and app is not in dev mode
-        if($request->user()->isSuperior() && !config('app.debug')){
-            return back();
-        }
-
         $search = $request->query('search');
 
         $leads = Client::select([
@@ -75,10 +70,6 @@ class MyListHandleController extends Controller
 
     public function full(Request $request)
     {
-        if($request->user()->isSuperior() && !config('app.debug')){
-            return back();
-        }
-
         $currentCampaign = $request->user()->getCurrentCampaign();
 
         $search = $request->query('search');
