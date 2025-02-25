@@ -96,7 +96,6 @@ class MyListHandleController extends Controller
             ->join("lead_distribution_prospect", "lead_distribution_prospect.client_id", "=", "clients.id")
             ->join("lead_distribution_campaigns", "lead_distribution_campaigns.id", "=", "lead_distribution_prospect.lead_distribution_campaign_id")
             ->join("client_contacts", "client_contacts.client_id", "=", "clients.id")
-            ->where('user_id', $request->user()->id)
             ->where(function ($query) use ($search) {
                 $query->where('clients.name', 'like', "%$search%")
                     ->orWhere('clients.cpf', 'like', "%$search%")
