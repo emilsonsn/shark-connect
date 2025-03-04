@@ -76,19 +76,23 @@ class LeadDistributionCSVImportJob implements ShouldQueue
                 ->onQueue($queueName)
                 ->allowFailures()
                 ->finally(function ($batch) use ($campaign) {
-    
+
+                    Log::info("Batch Finalizado - ID: {$batch->id}");
+                    Log::info("Total de Jobs: {$batch->totalJobs}, Falhas: {$batch->failedJobs}");
+                
                     $completedJobs = $batch->totalJobs - $batch->failedJobs;
-    
-                    if($completedJobs > 0) {
-    
+                
+                    if ($completedJobs > 0) {
+                        Log::info("Atualizando status da campanha {$campaign->id} - Jobs Concluídos: {$completedJobs}");
+                
                         $campaign->status = 1;
                         $campaign->total = $completedJobs;
                         $campaign->remaining = $completedJobs;
                         $campaign->campaign_processing_status_id = LeadDistributionCampaign::STATUS_FINISHED;
                         $campaign->save();
-    
+                    } else {
+                        Log::warning("Nenhum job foi concluído para a campanha {$campaign->id}");
                     }
-                
                 })->dispatch();
     
             $campaign->batch_id = $batch->id;
