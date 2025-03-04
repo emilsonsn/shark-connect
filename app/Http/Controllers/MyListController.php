@@ -171,8 +171,6 @@ class MyListController extends Controller
     */
     public function store(StoreLeadDistributionCampaignRequest $request)
     {
-        Log::info('Entrei');
-
         $filename = uniqid(). ".csv";
         $path = $request->file->storeAs("campanhas", $filename);
 
@@ -190,7 +188,6 @@ class MyListController extends Controller
         ]);
 
         foreach($request->groups as $group) {
-            Log::info('loop');
             $campaign->groups()->attach(Group::find($group));
 
             //get the user from the group that has no superior
@@ -205,11 +202,7 @@ class MyListController extends Controller
             }
         }
 
-        Log::info('Iniciando dispache');
-
         LeadDistributionCSVImportJob::dispatch($campaign->id, $path);
-
-        Log::info('terminou dispache');
 
         return back()->with('flash', [
             'message' => 'Campanha criada com sucesso!',
