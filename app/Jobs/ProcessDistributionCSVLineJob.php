@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\LeadDistributionProspect;
+use Exception;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -32,86 +33,97 @@ class ProcessDistributionCSVLineJob implements ShouldQueue
      */
     public function handle(): void
     {
-
-        $cpf = preg_replace("/[^0-9]/", "", $this->line[1]);
-        $phone = preg_replace("/[^0-9]/", "", $this->line[5]);
-
-        $client = Client::where("cpf", $cpf)->first();
-
-        if(!$client) {
-            $client = new Client();
-            $client->name = $this->line[0];
-            $client->cpf = $cpf;
-            $client->save();
-        }
-
-        $ddd = substr($phone, 0, 2);
-        $number = substr($phone, 2);
-
-        $contact = $client->contacts()
-            ->where("ddd", $ddd)
-            ->where("number", $number)
-            ->first();
-
-        if(!$contact) {
-
-            $contact = new ClientContact();
-            $contact->ddd = $ddd;
-            $contact->number = $number;
-            $contact->save();
-
-            $client->contacts()->save($contact);
-        }
-
-        if($this->line[2] == "") {
-            $this->line[2] = 0;
-        }
-
-        LeadDistributionProspect::create([
-            "client_id" => $client->id,
-            "lead_distribution_campaign_id" => $this->campaignId,
-            "tabulation_id" => 1,
-            "margin" => str_replace(",", ".", $this->line[2]),
-            "convenant" => $this->line[3] ?? "",
-            "organ" => $this->line[4] ?? ""
-        ]);
-
-        //get all the columns after the 6th
-        $phones = array_slice($this->line, 6);
-
-        if(count($phones) == 0) {
-            return;
-        }
-
-        foreach($phones as $phone) {
-
-            $phone = preg_replace("/[^0-9]/", "", $phone);
-
-            if($phone == "") {
-                continue;
+        try{
+            Log::info("Executando job para a campanha {$this->campaignId}");
+    
+    
+            $cpf = preg_replace("/[^0-9]/", "", $this->line[1]);
+            $phone = preg_replace("/[^0-9]/", "", $this->line[5]);
+    
+            $client = Client::where("cpf", $cpf)->first();
+    
+            if(!$client) {
+                $client = new Client();
+                $client->name = $this->line[0];
+                $client->cpf = $cpf;
+                $client->save();            
             }
-
-            if(!is_numeric($phone)) {
-                continue;
-            }
-
+            
+            Log::info("Cliente salvo: {$client->id}");
+    
+    
             $ddd = substr($phone, 0, 2);
             $number = substr($phone, 2);
-
+    
             $contact = $client->contacts()
                 ->where("ddd", $ddd)
                 ->where("number", $number)
                 ->first();
-
+    
             if(!$contact) {
-
+    
                 $contact = new ClientContact();
                 $contact->ddd = $ddd;
                 $contact->number = $number;
                 $contact->save();
-
+    
                 $client->contacts()->save($contact);
             }
+    
+            if($this->line[2] == "") {
+                $this->line[2] = 0;
+            }
+    
+            LeadDistributionProspect::create([
+                "client_id" => $client->id,
+                "lead_distribution_campaign_id" => $this->campaignId,
+                "tabulation_id" => 1,
+                "margin" => str_replace(",", ".", $this->line[2]),
+                "convenant" => $this->line[3] ?? "",
+                "organ" => $this->line[4] ?? ""
+            ]);
+    
+            Log::info("Job finalizado com sucesso para {$cpf}");
+    
+            //get all the columns after the 6th
+            $phones = array_slice($this->line, 6);
+    
+            if(count($phones) == 0) {
+                return;
+            }
+    
+            foreach($phones as $phone) {
+    
+                $phone = preg_replace("/[^0-9]/", "", $phone);
+    
+                if($phone == "") {
+                    continue;
+                }
+    
+                if(!is_numeric($phone)) {
+                    continue;
+                }
+    
+                $ddd = substr($phone, 0, 2);
+                $number = substr($phone, 2);
+    
+                $contact = $client->contacts()
+                    ->where("ddd", $ddd)
+                    ->where("number", $number)
+                    ->first();
+    
+                if(!$contact) {
+    
+                    $contact = new ClientContact();
+                    $contact->ddd = $ddd;
+                    $contact->number = $number;
+                    $contact->save();
+    
+                    $client->contacts()->save($contact);
+                }
+            }
+        }catch(Exception $error){
+            Log::error($error->getMessage());
         }
 
     }
