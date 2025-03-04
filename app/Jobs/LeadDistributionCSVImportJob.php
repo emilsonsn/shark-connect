@@ -32,6 +32,8 @@ class LeadDistributionCSVImportJob implements ShouldQueue
     public function handle(): void
     {
         try{
+            Log::info("Entrou");
+
             $campaign = LeadDistributionCampaign::find($this->campaignId);
             
             $fileHandle = fopen(Storage::path($this->path), "r");
@@ -61,12 +63,13 @@ class LeadDistributionCSVImportJob implements ShouldQueue
                 $jobs[] = new ProcessDistributionCSVLineJob($line, $this->campaignId);
     
             }
+
+            Log::info("Total de jobs criados para a campanha {$campaign->id}: " . count($jobs));
+
     
             fclose($fileHandle);
     
             $queueName = $campaign->queueName();
-
-            Log::info("Total de jobs criados para a campanha {$campaign->id}: " . count($jobs));
     
             $batch = Bus::batch($jobs)
                 ->name($queueName)
