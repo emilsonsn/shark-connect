@@ -102,9 +102,15 @@ class LeadDistributionCSVImportJob implements ShouldQueue
 
             $command = "php artisan queue:work --queue={$queueName} --once >> storage/logs/queue_exec.log 2>&1 &";
 
+            Log::info("ANTES DO EXEC");
             Log::info($command);
-
-            exec($command);
+            
+            $execOutput = exec($command, $output, $returnVar);
+            
+            Log::info("DEPOIS DO EXEC");
+            Log::info("Return var: " . $returnVar);
+            Log::info("Output: " . implode("\n", $output));
+            
         }catch(Exception $error){
             Log::error($error->getMessage());
         }
