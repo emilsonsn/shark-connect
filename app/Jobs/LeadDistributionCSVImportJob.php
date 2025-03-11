@@ -70,7 +70,7 @@ class LeadDistributionCSVImportJob implements ShouldQueue
     
             $queueName = $campaign->name;
 
-            log::info($queueName);
+            Log::info($queueName);
     
             $batch = Bus::batch($jobs)
                 ->name($queueName)
@@ -102,7 +102,7 @@ class LeadDistributionCSVImportJob implements ShouldQueue
 
             $command = "php artisan queue:work --queue={$queueName} --once >> storage/logs/queue_exec.log 2>&1 &";
 
-            log::info($command);
+            Log::info($command);
 
             exec($command);
         }catch(Exception $error){
