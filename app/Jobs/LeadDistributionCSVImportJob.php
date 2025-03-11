@@ -70,6 +70,8 @@ class LeadDistributionCSVImportJob implements ShouldQueue
             fclose($fileHandle);
     
             $queueName = $campaign->queueName();
+
+            Log::info($queueName);
     
             $batch = Bus::batch($jobs)
                 ->name($queueName)
