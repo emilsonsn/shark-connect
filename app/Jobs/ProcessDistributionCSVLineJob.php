@@ -35,8 +35,7 @@ class ProcessDistributionCSVLineJob implements ShouldQueue
     {
         try{
             Log::info("Executando job para a campanha {$this->campaignId}");
-    
-    
+
             $cpf = preg_replace("/[^0-9]/", "", $this->line[1]);
             $phone = preg_replace("/[^0-9]/", "", $this->line[5]);
     

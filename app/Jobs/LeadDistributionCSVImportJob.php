@@ -66,12 +66,9 @@ class LeadDistributionCSVImportJob implements ShouldQueue
 
             Log::info("Total de jobs criados para a campanha {$campaign->id}: " . count($jobs));
 
-    
             fclose($fileHandle);
     
-            $queueName = $campaign->queueName();
-
-            Log::info($queueName);
+            $queueName = 'default';
     
             $batch = Bus::batch($jobs)
                 ->name($queueName)
