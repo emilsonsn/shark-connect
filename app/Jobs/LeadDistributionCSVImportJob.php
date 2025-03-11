@@ -74,7 +74,7 @@ class LeadDistributionCSVImportJob implements ShouldQueue
     
             $batch = Bus::batch($jobs)
                 ->name($queueName)
-                ->onQueue($queueName)
+                ->onQueue('default')
                 ->allowFailures()
                 ->finally(function ($batch) use ($campaign) {
 
