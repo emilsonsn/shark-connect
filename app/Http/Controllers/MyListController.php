@@ -6,7 +6,6 @@ use App\Models\LeadDistributionCampaign;
 use App\Http\Requests\StoreLeadDistributionCampaignRequest;
 use App\Http\Requests\UpdateLeadDistributionCampaignRequest;
 use App\Jobs\CampaignRecycleJob;
-use App\Jobs\CampaignUnifiedRecycleJob;
 use App\Jobs\LeadDistributionCSVImportJob;
 use App\Models\Group;
 use App\Models\LeadDistributionCampaignUser;

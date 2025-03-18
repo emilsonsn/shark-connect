@@ -100,7 +100,7 @@ class LeadDistributionCSVImportJob implements ShouldQueue
             $campaign->campaign_processing_status_id = LeadDistributionCampaign::STATUS_PROCESSING;
             $campaign->save();
 
-            $command = "php artisan queue:work --queue={$queueName} --once >> storage/logs/queue_exec.log 2>&1 &";
+            $command = "while php artisan queue:work --queue={$queueName} --once --stop-when-empty; do :; done >> storage/logs/queue_exec.log 2>&1 &";
 
             Log::info("ANTES DO EXEC");
             Log::info($command);
