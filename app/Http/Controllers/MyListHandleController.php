@@ -84,38 +84,32 @@ class MyListHandleController extends Controller
         }
 
         $leads = Client::select([
-                "clients.id as client_id",
-                "clients.name as client_name", 
-                "lead_distribution_campaigns.name as campaign_name",
-                "lead_distribution_prospect.tabulation_id",
-                "lead_distribution_prospect.margin",
-                "lead_distribution_prospect.convenant",
-                "lead_distribution_prospect.organ",
-                "lead_distribution_prospect.id as id"
-            ])
-            ->join("lead_distribution_prospect", "lead_distribution_prospect.client_id", "=", "clients.id")
-            ->join("lead_distribution_campaigns", "lead_distribution_campaigns.id", "=", "lead_distribution_prospect.lead_distribution_campaign_id")
-            ->join("client_contacts", "client_contacts.client_id", "=", "clients.id")
-            ->where(function ($query) use ($search) {
-                $query->where('clients.name', 'like', "%$search%")
-                    ->orWhere('clients.cpf', 'like', "%$search%")
-                    ->orWhere(function($query2) use ($search) {
-                        $query2->where('client_contacts.number', 'like', "%$search%")
-                            ->orWhereRaw("RIGHT(client_contacts.number, 8) LIKE ?", ["%".substr($search, -8)."%"])
-                            ->orWhereRaw("RIGHT(client_contacts.number, 9) LIKE ?", ["%".substr($search, -9)."%"]);
-                    });
-            })            
-            ->groupBy([
-                "clients.id",
-                "clients.name",
-                "lead_distribution_campaigns.name",
-                "lead_distribution_prospect.tabulation_id",
-                "lead_distribution_prospect.margin",
-                "lead_distribution_prospect.convenant",
-                "lead_distribution_prospect.organ",
-                "lead_distribution_prospect.id"
-            ])
-            ->paginate(50);
+            "clients.id as client_id",
+            "clients.name as client_name", 
+            "lead_distribution_campaigns.name as campaign_name",
+            "lead_distribution_prospect.tabulation_id",
+            "lead_distribution_prospect.margin",
+            "lead_distribution_prospect.convenant",
+            "lead_distribution_prospect.organ",
+            "lead_distribution_prospect.id as id"
+        ])
+        ->join("lead_distribution_prospect", "lead_distribution_prospect.client_id", "=", "clients.id")
+        ->join("lead_distribution_campaigns", "lead_distribution_campaigns.id", "=", "lead_distribution_prospect.lead_distribution_campaign_id")
+        ->join("client_contacts", "client_contacts.client_id", "=", "clients.id")
+        ->where(function ($query) use ($search) {
+            $query->where('clients.name', 'like', "%{$search}%")
+                ->orWhere('clients.cpf', 'like', "%{$search}%")
+                ->orWhere(function ($subQuery) use ($search) {
+                    $last8 = substr(preg_replace('/\D/', '', $search), -8);
+                    $last9 = substr(preg_replace('/\D/', '', $search), -9);
+    
+                    $subQuery->where('client_contacts.number', 'like', "%{$search}%")
+                        ->orWhere('client_contacts.number', 'like', "%{$last8}")
+                        ->orWhere('client_contacts.number', 'like', "%{$last9}");
+                });
+        })
+        ->distinct()
+        ->paginate(50);    
         
         return Inertia::render('LeadDistribution/FullLeadList',
             [
