@@ -13,6 +13,8 @@ const props = defineProps({
     currentCampaign: Number,
 });
 
+const isLoading = ref(false);
+
 const formatStatus = (status) => {
     if (status == 1) {
         return "Aberto";
@@ -75,7 +77,14 @@ onMounted(async () => {
 });
 
 const loadLeadList = () => {
-    router.get(route('full-lead-distribution.handle.index'), { search: searchRef.value }, { preserveState: true });
+    isLoading.value = true;
+
+    router.get(route('full-lead-distribution.handle.index'), { search: searchRef.value }, {
+        preserveState: true,
+        onFinish: () => {
+            isLoading.value = false;
+        }
+    });
 }
 
 </script>
@@ -85,7 +94,11 @@ const loadLeadList = () => {
         <div class="grid">
             <div class="col-12">
                 <div class="card">
-
+                    <template v-if="isLoading">
+                        <div class="flex justify-center items-center" style="height: 6rem; width: 100%;">
+                            <i class="pi pi-spinner pi-spin" style="font-size: 5rem; display: inline-block; transform-origin: center; height: 5rem;"></i>
+                        </div>
+                    </template>
                     <DataTable 
                         :value="leads.data" 
                         tableStyle="min-width: 50rem;"
@@ -132,7 +145,6 @@ const loadLeadList = () => {
                                     
                                 </div>
                             </div>
-
                         </template>
 
                         <Column field="campaign_name" header="Campanha" />
@@ -154,7 +166,7 @@ const loadLeadList = () => {
                         </Column>
                         <Column header="Ações">
                             <template #body="{ data }">
-                                <Button @click="() => router.visit(route('lead-distribution.handle.treatLead', data.id))">
+                                <Button @click="() => router.visit(route('full-lead-distribution.handle.treatLead', data.id))">
                                     Atendimento
                                 </Button>                                
                             </template>

@@ -146,6 +146,29 @@ class MyListHandleController extends Controller
 
     }
 
+    public function fullTreatLead(Request $request, $id)
+    {
+        $prospect = Client::join("lead_distribution_prospect", "lead_distribution_prospect.client_id", "=", "clients.id")
+            ->where("lead_distribution_prospect.id", $id)
+            ->select()
+            ->first();
+    
+        if ($prospect == null) {
+            return back()->with('flash', [
+                'message' => 'Lead não encontrado',
+                'type' => 'error'
+            ]);
+        }
+    
+        $campanha = LeadDistributionCampaign::find($prospect->lead_distribution_campaign_id);
+    
+        return Inertia::render('LeadDistribution/TreatLeadView', [
+            'lead' => $prospect,
+            'campaign' => $campanha,
+            'isNew' => false
+        ]);
+    }
+
     public function treatNewLead(Request $request)
     {
 
