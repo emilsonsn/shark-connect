@@ -101,17 +101,25 @@ class DashboardController extends Controller
             ->orderBy('total', 'desc')
             ->first();
     
-        $rankingConsumedOnMonth = DB::query()
-            ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
-            ->from('leads_taken_by_month_report')
-            ->join('users', 'users.id', '=', 'leads_taken_by_month_report.user_id')
+        $rankingConsumedOnMonth = DB::table('lead_distribution_prospect as prospect')
+            ->join('users', 'users.id', '=', 'prospect.user_id')
             ->join('groups', 'groups.id', '=', 'users.group_id')
-            ->where('year', $year)
-            ->where('month', $month)
+            ->select(
+                'users.id as id',
+                'users.name as name',
+                'groups.name as group_name',
+                DB::raw('COUNT(prospect.id) as total')
+            )
+            ->whereNotNull('prospect.caught_at')
+            ->whereNotNull('prospect.tabulation_id')
+            ->where('prospect.tabulation_id', '!=', 1)
+            ->where('prospect.tabulation_id', '!=', 5)
+            ->whereYear('prospect.created_at', $year)
+            ->whereMonth('prospect.created_at', $month)
             ->groupBy('users.id', 'users.name', 'groups.name')
             ->orderBy('total', 'desc')
             ->get();
-                
+        
         $moreConsumedToday = DB::query()
             ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
             ->from('leads_taken_by_month_report')
