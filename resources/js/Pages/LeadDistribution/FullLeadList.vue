@@ -154,11 +154,9 @@ const loadLeadList = () => {
                         </Column>
                         <Column header="Ações">
                             <template #body="{ data }">
-                                <Link :href="route('lead-distribution.handle.treatLead', data.id)" >
-                                    <Button>
-                                        Atendimento
-                                    </Button>
-                                </Link>
+                                <Button @click="() => router.visit(route('lead-distribution.handle.treatLead', data.id))">
+                                    Atendimento
+                                </Button>                                
                             </template>
                         </Column>
                     </DataTable>
