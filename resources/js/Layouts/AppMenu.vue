@@ -15,7 +15,7 @@ const model = ref([
             { 
                 label: 'Usuários', 
                 permission: 'manage-users',
-                icon: PrimeIcons.USER, 
+                icon: PrimeIcons.USERS, 
                 items: [
                     { label: 'Listar', icon: PrimeIcons.USERS, to: 'usuarios.index', permission: 'manage-users'},
                     { label: 'Criar', icon: PrimeIcons.USER_PLUS, to: 'usuarios.create', permission: 'manage-users'},
@@ -32,7 +32,7 @@ const model = ref([
             },
             { label: 'Buscar Lead', icon: PrimeIcons.SEARCH, to: 'full-lead-distribution.handle.index', permission: true },
 
-            { label: 'Minha Lista', icon: PrimeIcons.LIST, to: 'lead-distribution.handle.index', permission: true },
+            { label: 'Iniciar Atendimento', icon: PrimeIcons.USER, to: 'lead-distribution.handle.treatNewLead', permission: true },
             
             { label: 'Campanhas para usuarios', permission:'view-campaigns' , icon: PrimeIcons.LIST, to: 'lead-distribution.campaigns.users' },
         ]

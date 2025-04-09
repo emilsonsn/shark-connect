@@ -467,10 +467,10 @@ const activeCondition = (current, condition) => {
                             v-if="!$page.props.permissions.includes('view-campaigns') || envMode == 'development'"
                         >
                             <Link
-                                :href="route('lead-distribution.handle.index')"
+                                :href="route('lead-distribution.handle.treatNewLead')"
                                 :class="{
                                     'group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4': true,
-                                    'bg-graydark dark:bg-meta-4': route().current('lead-distribution.handle.index') ,
+                                    'bg-graydark dark:bg-meta-4': route().current('lead-distribution.handle.treatNewLead') ,
                                 }"
                             >
                                 <svg
@@ -490,7 +490,7 @@ const activeCondition = (current, condition) => {
                                         fill=""
                                     />
                                 </svg>
-                                Minha Lista
+                                Iniciar Atendimento
                             </Link>
                         </li>
                         
