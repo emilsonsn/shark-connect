@@ -1,12 +1,14 @@
-
 <script setup>
 import AppLayout from '@/Layouts/AppLayout.vue';
 import Pagination from '@/Components/Pagination.vue';
 
 const props = defineProps({
     campaigns: Object,
+    rankingConsumedOnMonth: {
+        type: [Array, Object],
+        default: () => [],
+    },
 });
-
 </script>
 
 <template>
@@ -30,7 +32,8 @@ const props = defineProps({
                     <Pagination :data="campaigns"></Pagination>
 
                 </div>
-            </div>
+            </div>            
         </div>
+
     </AppLayout>
 </template>

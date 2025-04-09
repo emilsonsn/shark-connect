@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Group;
 use App\Models\LeadsTakenByMonthReport;
 use App\Models\User;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,7 +17,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request){
 
-        if($request->user()->hasPermissionTo('list-count-leads-taken-by-all')){
+        $auth = Auth::user()->refresh();
+        if(in_array($auth->group_id, [1, 3, 5])){
             return $this->adminUserDashboard($request);
         }
 
@@ -82,105 +84,93 @@ class DashboardController extends Controller
 
     }
 
-    private function adminUserDashboard(Request $request){
+    private function adminUserDashboard(Request $request)
+    {
+        $year = date('Y');
+        $month = date('m');
+        $day = date('d');
+    
+        $moreConsumedOnMonth = DB::query()
+            ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
+            ->from('leads_taken_by_month_report')
+            ->join('users', 'users.id', '=', 'leads_taken_by_month_report.user_id')
+            ->join('groups', 'groups.id', '=', 'users.group_id')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->groupBy('users.id', 'users.name', 'groups.name')
+            ->orderBy('total', 'desc')
+            ->first();
+    
+        $rankingConsumedOnMonth = DB::query()
+            ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
+            ->from('leads_taken_by_month_report')
+            ->join('users', 'users.id', '=', 'leads_taken_by_month_report.user_id')
+            ->join('groups', 'groups.id', '=', 'users.group_id')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->groupBy('users.id', 'users.name', 'groups.name')
+            ->orderBy('total', 'desc')
+            ->get();
+                
+        $moreConsumedToday = DB::query()
+            ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
+            ->from('leads_taken_by_month_report')
+            ->join('users', 'users.id', '=', 'leads_taken_by_month_report.user_id')
+            ->join('groups', 'groups.id', '=', 'users.group_id')
+            ->where('year', $year)
+            ->where('month', $month)
+            ->where('day', $day)
+            ->groupBy('users.id', 'users.name', 'groups.name')
+            ->orderBy('total', 'desc')
+            ->first();
+    
+        $moreUsedCampaignOnMonth = DB::selectOne("
+            SELECT name, total - remaining as consumed 
+            FROM lead_distribution_campaigns 
+            WHERE month(last_recycle_date) = month(now()) 
+            ORDER BY consumed DESC 
+            LIMIT 1
+        ");
+    
+        $moreUsedCampaignToday = DB::selectOne("
+            SELECT count(*) as total, t2.name 
+            FROM lead_distribution_prospect as t1
+            JOIN lead_distribution_campaigns as t2
+            ON t1.lead_distribution_campaign_id = t2.id
+            WHERE caught_at IS NOT NULL 
+            AND DATE(caught_at) = DATE(NOW()) 
+            GROUP BY lead_distribution_campaign_id, t2.name 
+            ORDER BY total DESC 
+            LIMIT 1
+        ");
 
-        $key = "moreConsumedOnMonth:admin";
-
-        if(Cache::has($key)){
-            $moreConsumedOnMonth = Cache::get($key);
-        } 
-        else {
-            $moreConsumedOnMonth = DB::query()
-                ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
-                ->from('leads_taken_by_month_report')
-                ->join('users', 'users.id', '=', 'leads_taken_by_month_report.user_id')
-                ->join('groups', 'groups.id', '=', 'users.group_id')
-                ->where('year', date('Y'))
-                ->where('month', date('m'))
-                ->groupBy('users.id', 'users.name', 'groups.name')
-                ->orderBy('total', 'desc')
-                ->first();
-
-            //cache it for 2 hours
-            Cache::put($key, $moreConsumedOnMonth, 120);
-        
-        }
-        
-        $key = "moreConsumedToday:admin";
-
-        if(Cache::has($key)){
-            $moreConsumedToday = Cache::get($key);
-        } 
-        else {
-            $moreConsumedToday = DB::query()
-                ->select('users.id as id', 'users.name as name', 'groups.name as group_name', DB::raw('SUM(total) as total'))
-                ->from('leads_taken_by_month_report')
-                ->join('users', 'users.id', '=', 'leads_taken_by_month_report.user_id')
-                ->join('groups', 'groups.id', '=', 'users.group_id')
-                ->where('year', date('Y'))
-                ->where('month', date('m'))
-                ->where('day', date('d'))
-                ->groupBy('users.id', 'users.name', 'groups.name')
-                ->orderBy('total', 'desc')
-                ->first();
-
-            //cache it for 2 hours
-            Cache::put($key, $moreConsumedToday, 120);
-        
-        }
-
-        $key = "moreUsedCampaignOnMonth";
-
-        if(Cache::has($key)){
-            $moreUsedCampaignOnMonth = Cache::get($key);
-        } 
-        else {
-            $moreUsedCampaignOnMonth = DB::select("SELECT name, total - remaining as consumed FROM lead_distribution_campaigns where month(last_recycle_date) = month(now()) order by consumed desc limit 1;");
-
-            if(count($moreUsedCampaignOnMonth) > 0){
-                $moreUsedCampaignOnMonth = $moreUsedCampaignOnMonth[0];
-            } else {
-                $moreUsedCampaignOnMonth = null;
-            }
-
-            //cache it for 2 hours
-            Cache::put($key, $moreUsedCampaignOnMonth, 120);
-        
-        }
-
-        $key = "moreUsedCampaignToday";
-
-        if(Cache::has($key)){
-            $moreUsedCampaignToday = Cache::get($key);
-        } 
-        else {
-
-            $moreUsedCampaignToday = DB::select("
-                SELECT count(*) as total, t2.name FROM lead_distribution_prospect as t1
-                join lead_distribution_campaigns as t2
-                on t1.lead_distribution_campaign_id = t2.id
-                where caught_at is not null and date(caught_at) = date(now()) group by lead_distribution_campaign_id, t2.name order by total desc limit 1;
-            ");
-
-            if(count($moreUsedCampaignToday) > 0){
-                $moreUsedCampaignToday = $moreUsedCampaignToday[0];
-            } else {
-                $moreUsedCampaignToday = null;
-            }
-
-            //cache it for 2 hours
-            Cache::put($key, $moreUsedCampaignToday, 120);
-        
-        }
-        
         return Inertia::render('Dashboard', [
             'moreConsumedOnMonth' => $moreConsumedOnMonth,
             'moreConsumedToday' => $moreConsumedToday,
             'moreUsedCampaignOnMonth' => $moreUsedCampaignOnMonth,
             'moreUsedCampaignToday' => $moreUsedCampaignToday,
+            'rankingConsumedOnMonth' => $rankingConsumedOnMonth,
         ]);
-
     }
+
+    public function userCampaignDetails($userId)
+    {
+        $campaigns = DB::table('lead_distribution_prospect as prospect')
+            ->join('lead_distribution_campaigns as campaign', 'prospect.lead_distribution_campaign_id', '=', 'campaign.id')
+            ->select(
+                'campaign.name as campaign_name',
+                DB::raw('COUNT(prospect.id) as total_leads'),
+                DB::raw('SUM(CASE WHEN prospect.tabulation_id IN (1,5) THEN 1 ELSE 0 END) as leads_abertos'),
+                DB::raw('SUM(CASE WHEN prospect.tabulation_id NOT IN (1,5) THEN 1 ELSE 0 END) as leads_finalizados')
+            )
+            ->where('prospect.user_id', $userId)
+            ->groupBy('campaign.id', 'campaign.name')
+            ->orderBy('campaign.id', 'DESC')
+            ->take(100)
+            ->get();
+    
+        return response()->json($campaigns);
+    }    
 
     public function monthlyReport(Request $request){
 

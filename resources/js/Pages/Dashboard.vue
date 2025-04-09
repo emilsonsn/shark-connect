@@ -2,6 +2,21 @@
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '../Layouts/AppLayout.vue';
+import axios from 'axios';
+import Dialog from 'primevue/dialog';
+
+const showModal = ref(false);
+const campaignDetails = ref([]);
+
+const openCampaignDetails = async (userId) => {
+    try {
+        const response = await axios.get(route('dashboard.user.campaigns', userId));
+        campaignDetails.value = response.data;
+        showModal.value = true;
+    } catch (error) {
+        console.error(error);
+    }
+};
 
 const props = defineProps({
     // subordinates: {
@@ -18,7 +33,11 @@ const props = defineProps({
     },
     moreUsedCampaignToday: {
         type: Object,
-    }
+    },
+    rankingConsumedOnMonth: {
+        type: [Array, Object],
+        default: () => [],
+    },    
 });
 
 const params = new URLSearchParams(window.location.search)
@@ -118,6 +137,38 @@ const loadDashboard = () => {
                 </div>
             </div>
         </div>
+
+        <div class="grid" v-if="Array.isArray(rankingConsumedOnMonth) && rankingConsumedOnMonth.length > 0">
+            <div class="col-12">
+                <div class="card">
+                    <div class="mb-4 flex justify-content-between">
+                        <h1 class="text-4xl font-bold text-gray-800">
+                            Ranking Vendedores (Mês)
+                        </h1>
+                    </div>
+
+                    <DataTable :value="rankingConsumedOnMonth">
+                        <Column field="name" header="Nome"></Column>
+                        <Column field="group_name" header="Grupo"></Column>
+                        <Column field="total" header="Total"></Column>
+                        <Column header="Ações">
+                            <template #body="{ data }">
+                                <Button @click="openCampaignDetails(data.id)">Detalhes</Button>
+                            </template>
+                        </Column>                        
+                    </DataTable>
+                </div>
+            </div>
+        </div>
+
+        <Dialog v-model:visible="showModal" header="Detalhes por Campanha" :modal="true" :style="{ width: '50vw' }">
+            <DataTable :value="campaignDetails">
+                <Column field="campaign_name" header="Campanha"></Column>
+                <Column field="total_leads" header="Total de Leads"></Column>
+                <Column field="leads_abertos" header="Em Aberto"></Column>
+                <Column field="leads_finalizados" header="Finalizados"></Column>
+            </DataTable>
+        </Dialog>        
 
     </AppLayout>
 </template>

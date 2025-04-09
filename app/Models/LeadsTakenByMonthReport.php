@@ -10,4 +10,12 @@ class LeadsTakenByMonthReport extends Model
     use HasFactory;
 
     protected $table = 'leads_taken_by_month_report';
+
+    protected $fillable = [
+        'user_id',
+        'day',
+        'month',
+        'year',
+        'total',
+    ];
 }
