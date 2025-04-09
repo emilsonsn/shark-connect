@@ -34,8 +34,6 @@ class ProcessDistributionCSVLineJob implements ShouldQueue
     public function handle(): void
     {
         try{
-            Log::info("Executando job para a campanha {$this->campaignId}");
-
             $cpf = preg_replace("/[^0-9]/", "", $this->line[1]);
             $phone = preg_replace("/[^0-9]/", "", $this->line[5]);
     
@@ -82,9 +80,6 @@ class ProcessDistributionCSVLineJob implements ShouldQueue
                 "organ" => $this->line[4] ?? ""
             ]);
     
-            Log::info("Job finalizado com sucesso para {$cpf}");
-    
-            //get all the columns after the 6th
             $phones = array_slice($this->line, 6);
     
             if(count($phones) == 0) {
