@@ -32,8 +32,6 @@ class LeadDistributionCSVImportJob implements ShouldQueue
     public function handle(): void
     {
         try{
-            Log::info("Entrou");
-
             $campaign = LeadDistributionCampaign::find($this->campaignId);
             
             $fileHandle = fopen(Storage::path($this->path), "r");
@@ -55,7 +53,6 @@ class LeadDistributionCSVImportJob implements ShouldQueue
                     continue;
                 }
     
-                //deal with cedilla in the array
                 $line = array_map(function($item) {
                     return mb_convert_encoding($item, "UTF-8", "ISO-8859-1");
                 }, $line);
@@ -99,17 +96,6 @@ class LeadDistributionCSVImportJob implements ShouldQueue
             $campaign->batch_id = $batch->id;
             $campaign->campaign_processing_status_id = LeadDistributionCampaign::STATUS_PROCESSING;
             $campaign->save();
-
-            $command = "while php artisan queue:work --queue=\"{$queueName}\" --once --stop-when-empty; do :; done >> storage/logs/queue_exec.log 2>&1 &";
-
-            Log::info("ANTES DO EXEC");
-            Log::info($command);
-            
-            $execOutput = exec($command, $output, $returnVar);
-            
-            Log::info("DEPOIS DO EXEC");
-            Log::info("Return var: " . $returnVar);
-            Log::info("Output: " . implode("\n", $output));
         
         }catch(Exception $error){
             Log::error($error->getMessage());

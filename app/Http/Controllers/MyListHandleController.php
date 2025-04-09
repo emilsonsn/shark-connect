@@ -115,7 +115,7 @@ class MyListHandleController extends Controller
                 "lead_distribution_prospect.organ",
                 "lead_distribution_prospect.id"
             ])
-            ->paginate(9999999);
+            ->paginate(50);
         
         return Inertia::render('LeadDistribution/FullLeadList',
             [

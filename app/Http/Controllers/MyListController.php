@@ -188,8 +188,6 @@ class MyListController extends Controller
 
         foreach($request->groups as $group) {
             $campaign->groups()->attach(Group::find($group));
-
-            //get the user from the group that has no superior
             $user = User::where('group_id', $group)
                 ->whereNull('superior_id')
                 ->get();
@@ -200,6 +198,34 @@ class MyListController extends Controller
                 }
             }
         }
+
+        $csvPath = storage_path("app/{$path}");
+        $cleanData = [];
+
+        if (($handle = fopen($csvPath, 'r')) !== false) {
+            $header = fgetcsv($handle, 0, ';');
+
+            while (($row = fgetcsv($handle, 0, ';')) !== false) {
+                $trimmedRow = array_map('trim', $row);
+                $nonEmptyValues = array_filter($trimmedRow, fn($value) => $value !== '');
+
+                if (count($nonEmptyValues) === 0) {
+                    continue;
+                }
+
+                $cleanData[] = array_combine($header, $trimmedRow);
+            }
+
+            fclose($handle);
+        }
+
+        // Salvar o CSV limpo de volta (se necessário)
+        $handle = fopen($csvPath, 'w');
+        fputcsv($handle, $header, ';');
+        foreach ($cleanData as $row) {
+            fputcsv($handle, $row, ';');
+        }
+        fclose($handle);        
 
         LeadDistributionCSVImportJob::dispatch($campaign->id, $path);
 
