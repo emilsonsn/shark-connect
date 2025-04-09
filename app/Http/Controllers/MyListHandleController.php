@@ -70,15 +70,13 @@ class MyListHandleController extends Controller
 
     public function full(Request $request)
     {
-        $currentCampaign = $request->user()->getCurrentCampaign();
-
         $search = $request->query('search');
 
-        if(!isset($search)){
+        if(!$search){
             return Inertia::render('LeadDistribution/FullLeadList',
                 [
-                    'leads' => Client::where('id', '-1')->paginate(10),
-                    'currentCampaign' => $currentCampaign?->id
+                    'leads' => [],
+                    'currentCampaign' => null
                 ]
             );
         }
@@ -97,24 +95,23 @@ class MyListHandleController extends Controller
         ->join("lead_distribution_campaigns", "lead_distribution_campaigns.id", "=", "lead_distribution_prospect.lead_distribution_campaign_id")
         ->join("client_contacts", "client_contacts.client_id", "=", "clients.id")
         ->where(function ($query) use ($search) {
-            $query->where('clients.name', 'like', "%{$search}%")
-                ->orWhere('clients.cpf', 'like', "%{$search}%")
+            $query->where('clients.cpf', 'like', "%{$search}%")
                 ->orWhere(function ($subQuery) use ($search) {
                     $last8 = substr(preg_replace('/\D/', '', $search), -8);
                     $last9 = substr(preg_replace('/\D/', '', $search), -9);
-    
-                    $subQuery->where('client_contacts.number', 'like', "%{$search}%")
-                        ->orWhere('client_contacts.number', 'like', "%{$last8}")
-                        ->orWhere('client_contacts.number', 'like', "%{$last9}");
+
+                    if($search) $subQuery->where('client_contacts.number', 'like', "%{$search}%");
+                    if($last8) $subQuery->orWhere('client_contacts.number', 'like', "%{$last8}");
+                    if($last9) $subQuery->orWhere('client_contacts.number', 'like', "%{$last9}");
                 });
         })
         ->distinct()
-        ->paginate(50);    
+        ->paginate(1);    
         
         return Inertia::render('LeadDistribution/FullLeadList',
             [
                 'leads' => $leads,
-                'currentCampaign' => $currentCampaign?->id
+                'currentCampaign' => null
             ]
         );
     }
