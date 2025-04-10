@@ -12,6 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('client_contacts', function (Blueprint $table) {            
+            $table->string('number')
+                ->nullable()
+                ->change();
+
             $table->string('ddd')
                 ->nullable()
                 ->change();
@@ -25,6 +29,9 @@ return new class extends Migration
     {
         Schema::table('client_contacts', function (Blueprint $table) {            
             $table->integer('ddd')                
+                ->change();
+
+            $table->bigInteger('number')
                 ->change();
         });
     }
