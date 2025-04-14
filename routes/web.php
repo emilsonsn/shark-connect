@@ -34,7 +34,8 @@ Route::middleware([
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
 
-    Route::get('/dashboard/user/{user}/campaigns', [DashboardController::class, 'userCampaignDetails'])->name('dashboard.user.campaigns');
+    Route::get('/dashboard/user/{user}/campaigns', [DashboardController::class, 'userCampaignDetails'])
+        ->name('dashboard.user.campaigns');
 
     Route::get('dashboard/campanhas/{userId}', [MyListController::class, 'getCampaingsUsedByUserOnDate'])
         ->name('dashboard.campanhasByUser');

@@ -110,10 +110,6 @@ class DashboardController extends Controller
                 'groups.name as group_name',
                 DB::raw('COUNT(prospect.id) as total')
             )
-            ->whereNotNull('prospect.caught_at')
-            ->whereNotNull('prospect.tabulation_id')
-            ->where('prospect.tabulation_id', '!=', 1)
-            ->where('prospect.tabulation_id', '!=', 5)
             ->whereYear('prospect.created_at', $year)
             ->whereMonth('prospect.created_at', $month)
             ->groupBy('users.id', 'users.name', 'groups.name')
@@ -167,16 +163,11 @@ class DashboardController extends Controller
             ->join('lead_distribution_campaigns as campaign', 'prospect.lead_distribution_campaign_id', '=', 'campaign.id')
             ->select(
                 'campaign.name as campaign_name',
-                DB::raw('COUNT(prospect.id) as total_leads'),
-                DB::raw('SUM(CASE WHEN prospect.tabulation_id IN (1,5) THEN 1 ELSE 0 END) as leads_abertos'),
-                DB::raw('SUM(CASE WHEN prospect.tabulation_id NOT IN (1,5) THEN 1 ELSE 0 END) as leads_finalizados')
+                DB::raw('COUNT(prospect.id) as total_leads')
             )
             ->where('prospect.user_id', $userId)
-            ->whereNotNull('prospect.tabulation_id')
-            ->where('prospect.tabulation_id', '!=', 1)
-            ->where('prospect.tabulation_id', '!=', 5)
-            ->whereMonth('campaign.created_at', date('m'))
-            ->whereYear('campaign.created_at', date('Y'))
+            ->whereMonth('prospect.created_at', date('m'))
+            ->whereYear('prospect.created_at', date('Y'))
             ->groupBy('campaign.id', 'campaign.name')
             ->orderBy('campaign.id', 'DESC')
             ->take(100)
