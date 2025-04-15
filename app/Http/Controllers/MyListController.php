@@ -200,26 +200,33 @@ class MyListController extends Controller
         }
 
         $csvPath = storage_path("app/{$path}");
-        $cleanData = [];
 
+        $cpfSeen = [];
+        $cleanData = [];
+        
         if (($handle = fopen($csvPath, 'r')) !== false) {
             $header = fgetcsv($handle, 0, ';');
-
+        
             while (($row = fgetcsv($handle, 0, ';')) !== false) {
                 $trimmedRow = array_map('trim', $row);
                 $nonEmptyValues = array_filter($trimmedRow, fn($value) => $value !== '');
-
+        
                 if (count($nonEmptyValues) === 0) {
                     continue;
                 }
-
-                $cleanData[] = array_combine($header, $trimmedRow);
+        
+                $data = array_combine($header, $trimmedRow);
+                $cpf = $data['cpf'] ?? null;
+        
+                if ($cpf && !isset($cpfSeen[$cpf])) {
+                    $cpfSeen[$cpf] = true;
+                    $cleanData[] = $data;
+                }
             }
-
+        
             fclose($handle);
-        }
+        }        
 
-        // Salvar o CSV limpo de volta (se necessário)
         $handle = fopen($csvPath, 'w');
         fputcsv($handle, $header, ';');
         foreach ($cleanData as $row) {
@@ -233,7 +240,6 @@ class MyListController extends Controller
             'message' => 'Campanha criada com sucesso!',
             'type' => 'success'
         ]);
-
     }
 
     /**
