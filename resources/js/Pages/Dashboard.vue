@@ -165,8 +165,6 @@ const loadDashboard = () => {
             <DataTable :value="campaignDetails">
                 <Column field="campaign_name" header="Campanha"></Column>
                 <Column field="total_leads" header="Total de Leads"></Column>
-                <Column field="leads_abertos" header="Em Aberto"></Column>
-                <Column field="leads_finalizados" header="Finalizados"></Column>
             </DataTable>
         </Dialog>        
 
