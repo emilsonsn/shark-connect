@@ -9,6 +9,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MyListHandleController;
 use App\Http\Controllers\MyListController;
+use App\Http\Controllers\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -79,8 +80,16 @@ Route::middleware([
 
         Route::patch('/{user}/token', [UserController::class, 'resetToken'])
             ->name('usuarios.resetToken');
-
     });
+
+    Route::prefix('sales')->group(function () {
+        Route::get('/', [SaleController::class, 'index'])->name('sales.index');
+        Route::get('/create', [SaleController::class, 'create'])->name('sales.create');
+        Route::post('/', [SaleController::class, 'store'])->name('sales.store');
+        // + adicionar
+        Route::post('/import', [SaleController::class, 'import'])
+            ->name('sales.import');
+    });    
 
     Route::prefix("minha-lista")->group(function () {
 
@@ -116,7 +125,7 @@ Route::middleware([
 
         Route::post('/campanhas/cancelar', [MyListController::class, "cancelProcessing"])
             ->name('lead-distribution.cancel');
-        
+
         Route::get('/novo', [MyListHandleController::class, 'treatNewLead'])
             ->name('lead-distribution.handle.treatNewLead');
 
@@ -143,7 +152,6 @@ Route::middleware([
 
         Route::put("/campanhasUsuarios/atualizarLimite", [MyListController::class, "updateLimite"])
             ->name("lead-distribution.campaigns.users.updateLimit");
-
     });
 
     Route::prefix("grupos")->middleware("permission:manage-groups")->group(function () {
@@ -182,6 +190,10 @@ Route::middleware([
             ->name("grupos.api.index");
 
     });
+
+    // + adicionar
+    Route::get('/clients/search', [ClientController::class, 'search'])
+        ->name('clients.search');
 
     Route::prefix("clientes")->group(function () {
 

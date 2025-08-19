@@ -11,7 +11,15 @@ const model = ref([
             { label: 'Dashboard', icon: PrimeIcons.CHART_LINE, to: 'dashboard', permission: true },
             
             { label: 'Campanhas', icon: PrimeIcons.MEGAPHONE, to: 'lead-distribution.index', permission: 'manage-campaigns'},
-            
+                        { 
+                label: 'Vendas',
+                icon: PrimeIcons.SHOPPING_CART,
+                permission: 'manage-groups',
+                items: [
+                    { label: 'Listar', icon: PrimeIcons.LIST, to: 'sales.index', permission: true },
+                    { label: 'Criar',  icon: PrimeIcons.PLUS, to: 'sales.create', permission: true },
+                ]
+            },
             { 
                 label: 'Usuários', 
                 permission: 'manage-users',
@@ -29,7 +37,7 @@ const model = ref([
                     { label: 'Listar', icon: PrimeIcons.LIST, to: 'grupos.index', permission: 'manage-groups'},
                     { label: 'Criar', icon: PrimeIcons.PLUS, to: 'grupos.create', permission: 'manage-groups'},
                 ] 
-            },
+            },         
             { label: 'Buscar Lead', icon: PrimeIcons.SEARCH, to: 'full-lead-distribution.handle.index', permission: true },
 
             { label: 'Iniciar Atendimento', icon: PrimeIcons.USER, to: 'lead-distribution.handle.treatNewLead', permission: true },

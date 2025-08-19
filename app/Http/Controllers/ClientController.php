@@ -44,6 +44,23 @@ class ClientController extends Controller
         );
     }
 
+    public function search(Request $request)
+    {
+        $q = (string) $request->query('q', '');
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $results = Client::query()
+            ->select('id', 'name', 'cpf')
+            ->where('name', 'LIKE', "%{$q}%")
+            ->orderBy('name')
+            ->limit(20)
+            ->get();
+
+        return response()->json($results);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
