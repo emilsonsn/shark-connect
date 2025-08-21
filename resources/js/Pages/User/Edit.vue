@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, router, usePage } from '@inertiajs/vue3';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -8,11 +8,15 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import RadioButton from '@/Components/RadioButton.vue';
 import Checkbox from '@/Components/Checkbox.vue';
 import { useToast } from 'primevue/usetoast';
+import InputText from 'primevue/inputtext';
+import Dropdown from 'primevue/dropdown';
+import Button from 'primevue/button';
 
 const props = defineProps({
     groups: Array,
     user: Object,
-    superiorUserList: Array
+    superiorUserList: Array,
+    banks: Array
 });
 
 const form = useForm({
@@ -26,127 +30,166 @@ const form = useForm({
     can_escobs: props.user.can_escobs,
 });
 
-const superiorUserList = ref(props.superiorUserList)
+const bankForm = useForm({
+    name: '',
+    username: ''
+});
 
+const banks = ref(props.banks || []);
+const superiorUserList = ref(props.superiorUserList);
 const toast = useToast();
 
 const submit = () => {
     form.put(route('usuarios.update', {user: props.user.id}), {
         onSuccess: () => {
-            form.reset()
-            const message = usePage().props.jetstream.flash?.message || '';
+            const message = usePage().props.jetstream.flash?.message || 'Usuário atualizado';
             const style = usePage().props.jetstream.flash?.type || 'success';
             toast.add({ severity: style, summary: 'Info', detail: message, life: 3000 });
         }
     });
 };
 
+const addBank = () => {
+    bankForm.post(route('users.banks.store', { user: props.user.id }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            bankForm.reset();
+            refreshBanks();
+            toast.add({ severity: 'success', summary: 'Info', detail: 'Banco adicionado', life: 2500 });
+        }
+    });
+};
+
+const deleteBank = (bankId) => {
+    router.delete(route('users.banks.destroy', { user: props.user.id, bank: bankId }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            banks.value = banks.value.filter(b => b.id !== bankId);
+            toast.add({ severity: 'success', summary: 'Info', detail: 'Banco removido', life: 2500 });
+        }
+    });
+};
+
+async function refreshBanks() {
+    const r = await fetch(route('users.banks.index', { user: props.user.id }));
+    banks.value = await r.json();
+}
+
 async function loadSecondSelect() {
-
     if (!form.group_id) {
-        superiorUserList.value = null
-        return
+        superiorUserList.value = null;
+        return;
     }
-
-    const response = await fetch('/grupos/' + form.group_id + '/usuarios')
-    superiorUserList.value = await response.json()
+    const response = await fetch('/grupos/' + form.group_id + '/usuarios');
+    superiorUserList.value = await response.json();
 }
 </script>
 
 <template>
     <AppLayout title="Editar usuario">
-
-<div class="grid">
-    <div class="col-12">
-        <div class="card">
-
-        <div class="mb-4">
-            <h1 class="text-2xl font-bold text-gray-800">
-                Editar usuário
-            </h1>
-        </div>
-
-        <div class="w-full sm:max-w-full mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-            <form @submit.prevent="submit" class="">
-                <div class="grid gap-4 mb-4">
-                    <div class="rounded col">
-                        <div>
-                            <InputLabel for="name" value="Nome" />
-                            <InputText id="name" v-model="form.name" type="text" class="mt-1 block w-full" required
-                                autofocus autocomplete="name" />
-                            <InputError class="mt-2" :message="form.errors.name"  />
-                        </div>
-
-                        <div class="mt-4">
-                            <InputLabel for="grupo" value="Grupo" />
-                            <Dropdown 
-                                id="grupo" 
-                                v-model="form.group_id" 
-                                :options="groups" 
-                                optionLabel="name" 
-                                optionValue="id"
-                                placeholder="Selecione um"
-                                class="w-full mt-1"
-                                @change="loadSecondSelect"
-                            >
-                            </Dropdown>
-                            <InputError class="mt-2" :message="form.errors.group_id"  />
-                        </div>
-
-                        <div class="mt-4">
-                            <InputLabel for="superior" value="Superior" />
-                            <Dropdown 
-                                id="superior" 
-                                v-model="form.superior_user_id" 
-                                :options="superiorUserList" 
-                                optionLabel="name"
-                                optionValue="id"
-                                placeholder="Selecione um"
-                                class="w-full mt-1"
-                                @change="loadSecondSelect"
-                            >
-                            </Dropdown>
-                            <InputError class="mt-2" :message="form.errors.superior_id"  />
-                        </div>
-
+        <div class="grid">
+            <div class="col-12">
+                <div class="card">
+                    <div class="mb-4">
+                        <h1 class="text-2xl font-bold text-gray-800">Editar usuário</h1>
                     </div>
 
-                    <div class="rounded col">
-                        <div>
-                            <InputLabel for="email" value="Email" />
-                            <InputText id="email" v-model="form.email" type="email" class="mt-1 block w-full" required
-                                autocomplete="username" />
-                            <InputError class="mt-2" :message="form.errors.email"  />
-                        </div>
+                    <div class="w-full sm:max-w-full mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+                        <form @submit.prevent="submit">
+                            <div class="grid gap-4 mb-4 md:grid-cols-2">
+                                <div class="rounded col">
+                                    <div>
+                                        <InputLabel for="name" value="Nome" />
+                                        <InputText id="name" v-model="form.name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
+                                        <InputError class="mt-2" :message="form.errors.name" />
+                                    </div>
 
-                        <div class="mt-4">
-                            <InputLabel for="password" value="Senha" />
-                            <InputText id="password" v-model="form.password" type="password" class="mt-1 block w-full"
-                                autocomplete="new-password" />
-                            <InputError class="mt-2" :message="form.errors.password" />
-                        </div>
+                                    <div class="mt-4">
+                                        <InputLabel for="grupo" value="Grupo" />
+                                        <Dropdown id="grupo" v-model="form.group_id" :options="groups" optionLabel="name" optionValue="id" placeholder="Selecione um" class="w-full mt-1" @change="loadSecondSelect" />
+                                        <InputError class="mt-2" :message="form.errors.group_id" />
+                                    </div>
 
-                        <div class="mt-4">
-                            <InputLabel for="password_confirmation" value="Confirmar senha" />
-                            <InputText id="password_confirmation" v-model="form.password_confirmation" type="password"
-                                class="mt-1 block w-full" autocomplete="new-password" />
-                            <InputError class="mt-2" :message="form.errors.password_confirmation" />
-                        </div>
+                                    <div class="mt-4">
+                                        <InputLabel for="superior" value="Superior" />
+                                        <Dropdown id="superior" v-model="form.superior_user_id" :options="superiorUserList" optionLabel="name" optionValue="id" placeholder="Selecione um" class="w-full mt-1" />
+                                        <InputError class="mt-2" :message="form.errors.superior_id" />
+                                    </div>
+                                </div>
+
+                                <div class="rounded col">
+                                    <div>
+                                        <InputLabel for="email" value="Email" />
+                                        <InputText id="email" v-model="form.email" type="email" class="mt-1 block w-full" required autocomplete="username" />
+                                        <InputError class="mt-2" :message="form.errors.email" />
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <InputLabel for="password" value="Senha" />
+                                        <InputText id="password" v-model="form.password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
+                                        <InputError class="mt-2" :message="form.errors.password" />
+                                    </div>
+
+                                    <div class="mt-4">
+                                        <InputLabel for="password_confirmation" value="Confirmar senha" />
+                                        <InputText id="password_confirmation" v-model="form.password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
+                                        <InputError class="mt-2" :message="form.errors.password_confirmation" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 border-t pt-6">
+                                <h3 class="text-xl font-semibold mb-3 p-0">Bancos</h3>
+                                
+                                <div class="grid md:grid-cols-3 gap-3 mb-3">
+                                    <div>
+                                        <InputLabel for="bank_name" value="Nome" />
+                                        <InputText id="bank_name" v-model="bankForm.name" type="text" class="mt-1 block w-full" />
+                                        <InputError class="mt-2" :message="bankForm.errors.name" />
+                                    </div>
+                                    <div>
+                                        <InputLabel for="bank_username" value="Username" />
+                                        <InputText id="bank_username" v-model="bankForm.username" type="text" class="mt-1 block w-full" />
+                                        <InputError class="mt-2" :message="bankForm.errors.username" />
+                                    </div>
+                                    <div class="flex align-items-center justify-content-end mt-3">
+                                        <Button class="ml-2" :disabled="bankForm.processing" @click.prevent="addBank">Adicionar banco</Button>
+                                    </div>
+                                </div>
+
+                                <div v-if="banks.length" class="mt-2">
+                                    <div class="overflow-x-auto">
+                                        <table class="min-w-full text-sm">
+                                            <thead>
+                                                <tr class="text-left border-b">
+                                                    <th class="py-2 pr-4">Banco</th>
+                                                    <th class="py-2 pr-4">Identificador</th>
+                                                    <th class="py-2">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="b in banks" :key="b.id" class="border-b">
+                                                    <td class="py-2 pr-4">{{ b.name }}</td>
+                                                    <td class="py-2 pr-4">{{ b.username }}</td>
+                                                    <td class="py-2">
+                                                        <Button severity="danger" size="small" @click.prevent="deleteBank(b.id)">Excluir</Button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <div v-else class="text-gray-500 text-sm">Nenhum banco cadastrado</div>
+                            </div>
+
+                            <div class="flex align-items-center justify-content-end mt-6">
+                                <Button class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" type="submit">Editar</Button>
+                            </div>
+                        </form>
                     </div>
-
                 </div>
-
-                <div class="flex align-items-center justify-content-end mt-4">
-
-                    <Button class="ml-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing" type="submit">
-                        Editar
-                    </Button>
-                </div>
-            </form>
+            </div>
         </div>
-
-    </div>
-    </div>
-</div>
     </AppLayout>
 </template>

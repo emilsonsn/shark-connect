@@ -113,6 +113,11 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function banks(): HasMany
+    {
+        return $this->hasMany(Bank::class);
+    }    
+
     public function leadDistributionCampaigns(): BelongsToMany
     {
         return $this->belongsToMany(LeadDistributionCampaign::class)

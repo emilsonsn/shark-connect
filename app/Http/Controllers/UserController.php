@@ -81,7 +81,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $user->load('group');
+        $user->load('group', 'banks');
 
         $superiorUserList = Group::find($user->group->id)
             ->users()
@@ -92,7 +92,8 @@ class UserController extends Controller
         return Inertia::render('User/Edit', [
             'user' => $user,
             'groups' => Group::all(),
-            'superiorUserList' => $superiorUserList
+            'superiorUserList' => $superiorUserList,
+            'banks' => $user->banks,
         ]);
     }
 

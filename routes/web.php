@@ -10,6 +10,7 @@ use App\Http\Controllers\GroupController;
 use App\Http\Controllers\MyListHandleController;
 use App\Http\Controllers\MyListController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\UserBankController;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,6 +81,15 @@ Route::middleware([
 
         Route::patch('/{user}/token', [UserController::class, 'resetToken'])
             ->name('usuarios.resetToken');
+        
+        Route::get('/{user}/banks', [UserBankController::class,'index'])
+            ->name('users.banks.index');
+
+        Route::post('/{user}/banks', [UserBankController::class,'store'])
+            ->name('users.banks.store');
+
+        Route::delete('/{user}/banks/{bank}', [UserBankController::class,'destroy'])
+            ->name('users.banks.destroy');
     });
 
     Route::prefix('sales')->group(function () {
