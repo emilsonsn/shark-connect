@@ -70,6 +70,11 @@ class User extends Authenticatable
      */
     protected $appends = [];
 
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new ActiveUserScope);
+    }
+
     public function isSuperior(): bool
     {
         return $this->subordinates()->exists();
