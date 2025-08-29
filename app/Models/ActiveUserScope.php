@@ -10,6 +10,6 @@ class ActiveUserScope implements Scope
 {
     public function apply(Builder $builder, Model $model)
     {
-        $builder->where('is_active', true);
+        $builder->where($model->qualifyColumn('is_active'), 1);
     }
 }
